@@ -66,3 +66,46 @@ minikube start --vm-driver=docker
 ```
 ./check_user_access.sh
 ```
+
+## Задание 5. Управление трафиком внутри кластера Kubertnetes
+
+Стартуем minikube с calico (потому что NetworkPolicy в дефолтном minikube не работают):
+```
+minikube start --vm-driver=docker --cni calico
+```
+Если ранее был minikube - его надо удалить:
+```
+minikube delete
+```
+
+Далее применяем конфиг сети:
+```
+kubectl apply -f non-admin-api-allow.yml
+```
+
+И создаем сервисы:
+```
+./create_services.sh
+```
+
+Потом коннектимся к тестовой поде:
+```
+kubectl run test-$RANDOM --rm -i -t --image=alpine -- wget -qO- --timeout=2 http://back-end-api-app 
+```
+пишет:
+```
+wget: download timed out
+```
+Значит доступа нет.
+
+Далее проверяем с фронта:
+```
+kubectl exec -it front-end-app -- curl http://back-end-api-app 
+```
+Доступ будет.
+
+А с админ фронта:
+```
+kubectl exec -it admin-front-end-app -- curl http://back-end-api-app 
+```
+не будет.
